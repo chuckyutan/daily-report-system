@@ -1,0 +1,77 @@
+# 環境変数
+.env
+.env.backup
+.env.local
+.env.*.local
+
+# node_modules と Viteのビルドファイル
+node_modules/
+public/build/
+public/hot
+storage/framework/views/*.php
+storage/framework/cache/*.php
+storage/framework/sessions/*.php
+storage/logs/*.log
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+vite-error.log
+
+# Composerの依存関係
+/vendor
+composer.lock
+
+# IDE / エディタ関連
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS 特有のファイル
+.DS_Store
+Thumbs.db
+
+# Laravel キャッシュ / ログ
+bootstrap/cache/*
+storage/framework/*
+storage/logs/*
+!bootstrap/cache/.gitignore
+!storage/framework/.gitignore
+!storage/logs/.gitignore
+
+# PHPUnit / Pest の結果
+phpunit.xml
+phpunit.xml.dist
+pest.php
+coverage/
+tests/_output/
+tests/_support/_generated/
+
+# Laravel のセッション関連
+storage/oauth-private.key
+storage/oauth-public.key
+
+# Git にコミットしたくないカスタムファイル
+/public/mix-manifest.json
+/public/storage
+/public/css/app.css
+/public/js/app.js
+/public/sitemap.xml
+/public/robots.txt
+/public/js/filament
+/public/css/filament
+/public/build
+/public/build/manifest.json
+/public/hot
+
+
+# SQLiteのデータベース
+database/database.sqlite
+database/database.sqlite-journal
+
+# その他
+*.log
+*.cache
+*.lock
