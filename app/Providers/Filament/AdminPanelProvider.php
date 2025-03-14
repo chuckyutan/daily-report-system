@@ -26,6 +26,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->brandName('日報集計システム')
             ->login()
             ->colors([
                 'primary' => Color::Amber,
