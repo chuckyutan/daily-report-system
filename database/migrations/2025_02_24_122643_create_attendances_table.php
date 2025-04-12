@@ -24,6 +24,8 @@ return new class extends Migration
             // FK
             $table->foreign('user_id')->references('id')->on('users');
             $table->foreign('vehicle_id')->references('id')->on('vehicles');
+
+            $table->unique(['user_id', 'report_date']);
         });
     }
 

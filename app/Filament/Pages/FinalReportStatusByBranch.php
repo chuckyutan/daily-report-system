@@ -17,14 +17,14 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns\IconColumn;
 use Illuminate\Database\Eloquent\Builder;
 
-class FinalReportByBranch extends Page implements HasTable
+class FinalReportStatusByBranch extends Page implements HasTable
 {
     use InteractsWithTable;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static string $view = 'filament.pages.final-report-by-branch';
-    protected static ?string $navigationLabel = '支店別日報状況';
-    protected static ?string $title = '支店別日報状況';
+    protected static ?string $navigationLabel = '支店別日報記載状況';
+    protected static ?string $title = '支店別日報記載状況';
 
     public $branchId;
     public $targetDate;
@@ -95,7 +95,7 @@ class FinalReportByBranch extends Page implements HasTable
 
                 TextColumn::make('name')
                     ->searchable()
-                    ->label('担当者'),
+                    ->label('社員'),
                 TextColumn::make('branch.branch_name')
                     ->label('支店'),
             ])
@@ -103,6 +103,7 @@ class FinalReportByBranch extends Page implements HasTable
                 Filter::make('specific_date')
                     ->form([
                         DatePicker::make('date')
+                            ->default(today())
                             ->label('日付')
                             ->displayFormat('Y年m月d日')
                             ->placeholder('日付を選択')

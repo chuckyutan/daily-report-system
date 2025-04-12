@@ -16,6 +16,10 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->date('report_date');
 
+            $table->time('start_time')->nullable(); // 最終終了時間
+            $table->time('end_time')->nullable(); // 最終終了時間
+            $table->string('last_location')->nullable(); // 最終現地
+
             // ■ R新規
             $table->unsignedInteger('r_new_count')->default(0);      // R新規件数
             $table->decimal('r_new_volume', 5, 1)->default(0); // R新規本数
@@ -71,11 +75,6 @@ return new class extends Migration
 
             // ■ AF販売パック
             $table->unsignedInteger('af_pack_count')->default(0); // AF販売パック数
-
-//            $table->decimal('total_amount', 10, 2)->default(0);     // 金額合計
-
-            $table->time('final_time')->nullable(); // 最終終了時間
-            $table->string('final_location')->nullable(); // 最終現地
 
             $table->timestamps();
 
