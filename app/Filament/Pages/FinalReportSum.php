@@ -78,7 +78,7 @@ class FinalReportSum extends Page implements HasTable
                 implode(', ', array_merge([
                     'branches.id as id',
                     'branches.branch_name as branch_name',
-                    'ANY_VALUE(final_reports.report_date) as report_date',
+                    'MIN(final_reports.report_date) as report_date',
                 ], $this->getTotalsSelect()))
             )
             ->groupBy('branches.id')
