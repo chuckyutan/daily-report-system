@@ -2,12 +2,17 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\FinalReport;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Livewire\Attributes\Reactive;
 
 class FinalReportStatsOverview extends BaseWidget
 {
+    protected $listeners = [
+        'finalReportDateChanged' => '$refresh',
+    ];
+
+    #[Reactive]
     public array $stats;
 
     protected function getStats(): array

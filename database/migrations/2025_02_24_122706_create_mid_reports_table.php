@@ -18,7 +18,6 @@ return new class extends Migration
             $table->decimal('mid_count', 5, 1)->default(0);      // 中間本数
             $table->decimal('mid_care_count', 5, 1)->default(0); // 中間ケア本数
             $table->integer('remaining_visits')->default(0);     // 残り訪問予定数
-            // 必要なカラムを追加
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');

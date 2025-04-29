@@ -2,13 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\MidReport;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
-use App\Models\FinalReport;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Concerns\InteractsWithTable;
-use App\Filament\Widgets\FinalReportStatsOverview;
 
 class MidReportSum extends Page implements HasTable
 {
@@ -34,13 +33,11 @@ class MidReportSum extends Page implements HasTable
      */
     protected function loadStats(): void
     {
-        $totals = FinalReport::join('users', 'mid_reports.user_id', '=', 'users.id')
+        $totals = MidReport::join('users', 'mid_reports.user_id', '=', 'users.id')
             ->join('branches', 'users.branch_id', '=', 'branches.id')
             ->selectRaw("
-                SUM(care_count) as total_care_count,
-                SUM(r_care_volume + care_volume) as total_care_volume,
-                SUM(r_new_volume + r_continue_volume + r_care_volume + filter_volume + house_goods_volume + care_volume + tele_distribution_volume + tele_visit_volume) as total_vehicle_volume,
-                SUM(r_new_count + r_continue_count + rgh_count + care_count + tele_distribution_count + tele_visit_count + cleaning_new_count + cleaning_continue_count) as total_contract_count
+                SUM(mid_count) as total_count,
+                SUM(mid_care_count) as total_care_count
             ")
             ->first();
 
@@ -52,15 +49,13 @@ class MidReportSum extends Page implements HasTable
      */
     protected function getTableQuery(): Builder
     {
-        return FinalReport::join('users', 'final_reports.user_id', '=', 'users.id')
+        return MidReport::join('users', 'mid_reports.user_id', '=', 'users.id')
             ->join('branches', 'users.branch_id', '=', 'branches.id')
             ->selectRaw("
              branches.id as id,
                 branches.branch_name as branch_name,
-                SUM(care_count) as total_care_count,
-                SUM(r_care_volume + care_volume) as total_care_volume,
-                SUM(r_new_volume + r_continue_volume + r_care_volume + filter_volume + house_goods_volume + care_volume + tele_distribution_volume + tele_visit_volume) as total_vehicle_volume,
-                SUM(r_new_count + r_continue_count + rgh_count + care_count + tele_distribution_count + tele_visit_count + cleaning_new_count + cleaning_continue_count) as total_contract_count
+                 SUM(mid_count) as total_count,
+                SUM(mid_care_count) as total_care_count
             ")
             ->groupBy('branches.id')
             ->orderBy('branches.branch_name', 'asc');
@@ -74,23 +69,19 @@ class MidReportSum extends Page implements HasTable
         return [
             TextColumn::make('branch_name')
                 ->label('支店'),
+            TextColumn::make('total_count')
+                ->label('合計の中間本数'),
             TextColumn::make('total_care_count')
-                ->label('合計のケア件数'),
-            TextColumn::make('total_care_volume')
-                ->label('合計のケア本数'),
-            TextColumn::make('total_vehicle_volume')
-                ->label('最終合計車両本数'),
-            TextColumn::make('total_contract_count')
-                ->label('契約件数'),
+                ->label('合計の中間ケア本数'),
         ];
     }
 
-    public function getHeaderWidgets(): array
-    {
-        return [
-            FinalReportStatsOverview::make([
-                'stats' => $this->stats,
-            ]),
-        ];
-    }
+//    public function getHeaderWidgets(): array
+//    {
+//        return [
+//            MidReportStatsOverview::make([
+//                'stats' => $this->stats,
+//            ]),
+//        ];
+//    }
 }

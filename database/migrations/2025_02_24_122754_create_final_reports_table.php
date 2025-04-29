@@ -76,6 +76,8 @@ return new class extends Migration
             // ■ AF販売パック
             $table->unsignedInteger('af_pack_count')->default(0); // AF販売パック数
 
+            $table->unsignedInteger('contract_count')->default(0); // 契約件数
+
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');

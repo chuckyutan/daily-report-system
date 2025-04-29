@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Pages\FinalReportSum;
 use App\Filament\Resources\FinalReportResource\Pages;
 use App\Models\FinalReport;
 use Filament\Forms\Components\DatePicker;
@@ -20,6 +19,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Number;
 use Illuminate\Validation\Rules\Unique;
 
 class FinalReportResource extends Resource
@@ -239,16 +239,10 @@ class FinalReportResource extends Resource
                             ]),
                     ]),
 
-                Section::make('その他')
+                Section::make('清掃')
                     ->schema([
                         Grid::make(3)
                             ->schema([
-                                TextInput::make('additional_amount')
-                                    ->numeric()
-                                    ->minValue(0)
-                                    ->default(0)
-                                    ->label('追加金額'),
-
                                 TextInput::make('cleaning_new_count')
                                     ->numeric()
                                     ->minValue(0)
@@ -291,6 +285,12 @@ class FinalReportResource extends Resource
                     ->schema([
                         Grid::make(3)
                             ->schema([
+                                TextInput::make('additional_amount')
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->default(0)
+                                    ->label('追加金額'),
+
                                 TextInput::make('frame_new_count')
                                     ->numeric()
                                     ->minValue(0)
@@ -302,6 +302,19 @@ class FinalReportResource extends Resource
                                     ->minValue(0)
                                     ->default(0)
                                     ->label('AF販売パック数'),
+                            ]),
+                    ]),
+
+                Section::make('')
+                    ->schema([
+                        Grid::make(3)
+                            ->schema([
+                                TextInput::make('contract_count')
+                                    ->numeric()
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->default(0)
+                                    ->label('契約件数'),
                             ]),
                     ]),
             ]);
@@ -332,13 +345,13 @@ class FinalReportResource extends Resource
                 TextColumn::make('totalAmount')
                     ->label('合計金額')
                     ->getStateUsing(function ($record) {
-                        return number_format($record->r_new_amount +
+                        return Number::currency($record->r_new_amount +
                             $record->r_continue_amount +
                             $record->rgh_amount +
                             $record->filter_amount +
                             $record->house_goods_amount +
                             $record->care_amount +
-                            $record->additional_amount);
+                            $record->additional_amount, 'JPY');
                     })
                     ->alignRight(),
 
@@ -363,11 +376,11 @@ class FinalReportResource extends Resource
                         return $query
                             ->when(
                                 $data['report_date_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('report_date', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('report_date', '>=', $date),
                             )
                             ->when(
                                 $data['report_date_to'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('report_date', '<=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('report_date', '<=', $date),
                             );
                     }),
 
@@ -380,9 +393,6 @@ class FinalReportResource extends Resource
                 EditAction::make(),
             ])
             ->bulkActions([
-                // Tables\Actions\BulkActionGroup::make([
-                //     Tables\Actions\DeleteBulkAction::make(),
-                // ]),
             ])
             ->defaultSort('report_date', 'desc');
     }
@@ -399,7 +409,6 @@ class FinalReportResource extends Resource
         return [
             'index' => Pages\ListFinalReports::route('/'),
             'create' => Pages\CreateFinalReport::route('/create'),
-//            'view' => Pages\ViewFinalReport::route('/{record}'),
             'edit' => Pages\EditFinalReport::route('/{record}/edit'),
         ];
     }

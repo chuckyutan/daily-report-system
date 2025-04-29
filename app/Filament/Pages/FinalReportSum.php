@@ -2,10 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use App\Models\FinalReport;
+use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -14,6 +15,7 @@ use App\Filament\Widgets\FinalReportStatsOverview;
 class FinalReportSum extends Page implements HasTable
 {
     use InteractsWithTable;
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static string $view = 'filament.pages.final-report-sum';
@@ -30,23 +32,38 @@ class FinalReportSum extends Page implements HasTable
         $this->loadStats();
     }
 
+    public function getTitle(): string
+    {
+        return $this->getTableFilterState('report_date')['report_date'] . ' 最終報告';
+    }
+
     /**
      * 全支店の合計値を取得
      */
     protected function loadStats(): void
     {
-        //        todo 契約件数total_contract_countについては手動入力なのか確認中
-        $totals = FinalReport::join('users', 'final_reports.user_id', '=', 'users.id')
-            ->join('branches', 'users.branch_id', '=', 'branches.id')
-            ->selectRaw("
-                SUM(care_count) as total_care_count,
-                SUM(care_volume) as total_care_volume,
-                SUM(r_new_volume + r_continue_volume + r_care_volume + filter_volume + house_goods_volume + care_volume) as total_vehicle_volume,
-                SUM(r_new_count + r_continue_count + rgh_count + care_count + tele_distribution_count + tele_visit_count + cleaning_new_count + cleaning_continue_count) as total_contract_count
-            ")
-            ->first();
+        $reportDate = $this->getTableFilterState('report_date');
+        $reports = $this->getTableQuery()->whereDate('report_date', $reportDate)->get();
 
-        $this->stats = $totals ? $totals->toArray() : [];
+        $this->stats = [
+            'total_care_count'      => $reports->sum('total_care_count'),
+            'total_care_volume'     => $reports->sum('total_care_volume'),
+            'total_vehicle_volume'  => $reports->sum('total_vehicle_volume'),
+            'total_contract_count'  => $reports->sum('total_contract_count'),
+        ];
+    }
+
+    /**
+     * 集計用の selectRaw 式を共通化
+     */
+    protected function getTotalsSelect(): array
+    {
+        return [
+            'SUM(care_count) as total_care_count',
+            'SUM(r_care_volume + care_volume) as total_care_volume',
+            'SUM(r_new_volume + r_continue_volume + r_care_volume + filter_volume + house_goods_volume + care_volume) as total_vehicle_volume',
+            'SUM(r_new_count + r_continue_count + rgh_count + care_count + tele_distribution_count + tele_visit_count + cleaning_new_count + cleaning_continue_count) as total_contract_count',
+        ];
     }
 
     /**
@@ -54,18 +71,37 @@ class FinalReportSum extends Page implements HasTable
      */
     protected function getTableQuery(): Builder
     {
-        return FinalReport::join('users', 'final_reports.user_id', '=', 'users.id')
-            ->join('branches', 'users.branch_id', '=', 'branches.id')
-            ->selectRaw("
-             branches.id as id,
-                branches.branch_name as branch_name,
-                SUM(care_count) as total_care_count,
-                SUM(r_care_volume + care_volume) as total_care_volume,
-                SUM(r_new_volume + r_continue_volume + r_care_volume + filter_volume + house_goods_volume + care_volume + tele_distribution_volume + tele_visit_volume) as total_vehicle_volume,
-                SUM(r_new_count + r_continue_count + rgh_count + care_count + tele_distribution_count + tele_visit_count + cleaning_new_count + cleaning_continue_count) as total_contract_count
-            ")
+        return FinalReport::query()
+            ->join('users',    'final_reports.user_id',  '=', 'users.id')
+            ->join('branches', 'users.branch_id',        '=', 'branches.id')
+            ->selectRaw(
+                implode(', ', array_merge([
+                    'branches.id as id',
+                    'branches.branch_name as branch_name',
+                    'ANY_VALUE(final_reports.report_date) as report_date',
+                ], $this->getTotalsSelect()))
+            )
             ->groupBy('branches.id')
-            ->orderBy('branches.branch_name', 'asc');
+            ->orderBy('branches.branch_name');
+    }
+
+
+    protected function getTableFilters(): array
+    {
+        return [
+            Filter::make('report_date')
+                ->label('レポート日')
+                ->form([
+                    DatePicker::make('report_date')
+                        ->default(today()->toDateString())
+                        ->label('日付'),
+                ])
+                ->query(function (Builder $query, array $data) {
+                    if (!empty($data['report_date'])) {
+                        $query->whereDate('report_date', $data['report_date']);
+                    }
+                })
+        ];
     }
 
     /**
@@ -94,7 +130,7 @@ class FinalReportSum extends Page implements HasTable
     protected function getTableRecordUrlUsing(): ?callable
     {
         return static function ($record) {
-            return FinalReportSumByBranch::getUrl(['branch' => $record->id]);
+            return FinalReportSumByBranch::getUrl(['branchId' => $record->id, 'reportDateString' => $record->report_date]);
         };
     }
 
@@ -107,4 +143,8 @@ class FinalReportSum extends Page implements HasTable
         ];
     }
 
+    public function updatedTableFilters(): void
+    {
+        $this->loadStats();
+    }
 }
