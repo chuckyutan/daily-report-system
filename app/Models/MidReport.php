@@ -11,4 +11,8 @@ class MidReport extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    protected $casts = [
+        'report_date' => 'date',
+    ];
 }

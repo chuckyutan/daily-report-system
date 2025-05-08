@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use Filament\Forms\Components\DatePicker;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
 use App\Models\FinalReport;
@@ -77,7 +78,7 @@ class FinalReportSum extends Page implements HasTable
             ->selectRaw(
                 implode(', ', array_merge([
                     'branches.id as id',
-                    'branches.branch_name as branch_name',
+                    'MIN(branches.branch_name) as branch_name',
                     'MIN(final_reports.report_date) as report_date',
                 ], $this->getTotalsSelect()))
             )
@@ -94,7 +95,9 @@ class FinalReportSum extends Page implements HasTable
                 ->form([
                     DatePicker::make('report_date')
                         ->default(today()->toDateString())
-                        ->label('日付'),
+                        ->label('日付')
+                        ->displayFormat('Y年m月d日')
+                        ->placeholder('日付を選択'),
                 ])
                 ->query(function (Builder $query, array $data) {
                     if (!empty($data['report_date'])) {
@@ -114,16 +117,16 @@ class FinalReportSum extends Page implements HasTable
                 ->label('支店'),
 
             TextColumn::make('total_care_count')
-                ->label('合計のケア件数'),
+                ->label('ケア件数合計'),
 
             TextColumn::make('total_care_volume')
-                ->label('合計のケア本数'),
+                ->label('ケア本数合計'),
 
             TextColumn::make('total_vehicle_volume')
                 ->label('最終合計車両本数'),
 
             TextColumn::make('total_contract_count')
-                ->label('契約件数'),
+                ->label('契約件数合計'),
         ];
     }
 
@@ -144,6 +147,26 @@ class FinalReportSum extends Page implements HasTable
     }
 
     public function updatedTableFilters(): void
+    {
+        $this->loadStats();
+    }
+
+    protected function getTableEmptyStateHeading(): ?string
+    {
+        return '最終報告データが見つかりません';
+    }
+
+    protected function getActions(): array
+    {
+        return [
+            Action::make('output')
+                ->label('営業売上報告書（最終）ダウンロード')
+                ->icon('heroicon-o-document-arrow-down')
+            ->action('output'),
+        ];
+    }
+
+    public function output(): void
     {
         $this->loadStats();
     }

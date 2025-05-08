@@ -3,7 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Branch;
-use App\Models\FinalReport;
+use App\Models\MidReport;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
@@ -11,18 +11,18 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Builder;
 
-class FinalReportSumByBranch extends Page implements HasTable
+class MidReportSumByBranch extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $slug = 'final-report-sum-by-branch/{branchId}/{reportDateString}';
+    protected static ?string $slug = 'mid-report-sum-by-branch/{branchId}/{reportDateString}';
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
-    protected static string $view = 'filament.pages.final-report-sum-by-branch';
+    protected static string $view = 'filament.pages.mid-report-sum-by-branch';
 
     protected static ?string $navigationLabel = null;
 
-    protected static ?string $title = '最終報告社員別詳細';
+    protected static ?string $title = '中間報告社員別詳細';
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -37,15 +37,15 @@ class FinalReportSumByBranch extends Page implements HasTable
 
     public function getTitle(): string
     {
-        return "最終報告詳細 {$this->branch->branch_name} {$this->reportDate->toDateString()}";
+        return "中間報告詳細 {$this->branch->branch_name} {$this->reportDate->toDateString()}";
     }
 
     protected function getTableQuery(): Builder
     {
-        return FinalReport::query()
+        return MidReport::query()
             ->whereHas('user', fn(Builder $q) => $q->where('branch_id', $this->branch->id)
             )
-            ->join('users', 'final_reports.user_id', '=', 'users.id')
+            ->join('users', 'mid_reports.user_id', '=', 'users.id')
             ->join('branches', 'users.branch_id', '=', 'branches.id')
             // ユーザー単位で集計する
             ->groupBy('user_id')
@@ -54,18 +54,11 @@ class FinalReportSumByBranch extends Page implements HasTable
     MIN(branches.id) as id,
     MIN(branches.branch_name) as branch_name,
         MIN(users.name) as user_name,
-    SUM(care_count)                                                  as total_care_count,
-    SUM(r_care_volume + care_volume)                                 as total_care_volume,
+    SUM(mid_count)                                                  as total_care,
+    SUM(mid_care_count)                                 as total_care_count,
     SUM(
-        r_new_volume
-      + r_continue_volume
-      + r_care_volume
-      + filter_volume
-      + house_goods_volume
-      + care_volume
-      + tele_distribution_volume
-      + tele_visit_volume
-    )                                                                 as total_vehicle_volume
+        remaining_visits
+    )                                                                 as total_remaining_visits
 ")
             ->with('user')
             ->orderBy('user_id', 'asc');
@@ -77,14 +70,14 @@ class FinalReportSumByBranch extends Page implements HasTable
             TextColumn::make('user_name')
                 ->label('担当者'),
 
+            TextColumn::make('total_care')
+                ->label('中間本数合計'),
+
             TextColumn::make('total_care_count')
-                ->label('合計ケア件数'),
+                ->label('中間ケア本数合計'),
 
-            TextColumn::make('total_care_volume')
-                ->label('合計合本数'),
-
-            TextColumn::make('total_vehicle_volume')
-                ->label('最終合計車両本数'),
+            TextColumn::make('total_remaining_visits')
+                ->label('残り訪問予定数合計'),
         ];
     }
 }

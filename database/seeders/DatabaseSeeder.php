@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             BranchSeeder::class,
             UserSeeder::class,
             FinalReportSeeder::class,
+            MidReportSeeder::class,
             VehicleSeeder::class,
             AttendanceSeeder::class,
         ]);

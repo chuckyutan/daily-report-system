@@ -16,6 +16,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\IconColumn;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class FinalReportStatusByBranch extends Page implements HasTable
 {
@@ -46,6 +47,10 @@ class FinalReportStatusByBranch extends Page implements HasTable
                     $query->where('branch_id', $this->branchId);
                 }
 
+                $filter = $this->getTableFilterState('specific_date');
+                $date   = $filter['date'] ?? now()->toDateString();
+                $this->targetDate = $date;
+
                 return $query;
             })
             ->columns([
@@ -58,18 +63,18 @@ class FinalReportStatusByBranch extends Page implements HasTable
 
                         if ($now->greaterThanOrEqualTo($deadline)) {
                             $midReport = MidReport::where('user_id', $record->id)
-                                ->whereDate('report_date', $today)
+                                ->where('report_date', $today)
                                 ->first();
 
-                            return !$midReport;
+                            return $midReport !== null;
                         }
 
                         return false;
                     })
                     ->boolean()
-                    ->trueIcon('heroicon-o-exclamation-circle')
+                    ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon(null)
-                    ->trueColor('danger'),
+                    ->trueColor('success'),
 
                 IconColumn::make('final_report_status_icon')
                     ->label('最終報告済')
@@ -83,15 +88,15 @@ class FinalReportStatusByBranch extends Page implements HasTable
                                 ->whereDate('report_date', $today)
                                 ->first();
 
-                            return !$finalReport;
+                            return $finalReport !== null;
                         }
 
                         return false;
                     })
                     ->boolean()
-                    ->trueIcon('heroicon-o-exclamation-circle')
+                    ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon(null)
-                    ->trueColor('danger'),
+                    ->trueColor('success'),
 
                 TextColumn::make('name')
                     ->searchable()
@@ -126,12 +131,12 @@ class FinalReportStatusByBranch extends Page implements HasTable
             ])
             ->defaultSort('name');
     }
-    public function getBranchsProperty()
+    public function getBranchsProperty(): Collection
     {
         return Branch::all();
     }
 
-    public function updatedBranchId()
+    public function updatedBranchId(): void
     {
         $this->resetTable();
     }
